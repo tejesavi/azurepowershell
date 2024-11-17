@@ -1,6 +1,5 @@
 name: CI Pipeline
 
-# Triggers the workflow on push or pull request to the main branch
 on:
   push:
     branches:
@@ -11,36 +10,41 @@ on:
 
 jobs:
   build-and-test:
-    # Specify the runner environment
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the code from the repository
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      # Step 2: Set up the required programming language/runtime
-      # Example: Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '16'
 
-      # Step 3: Install dependencies
       - name: Install Dependencies
+        working-directory: ./azurepowershell
         run: npm install
 
-      # Step 4: Run tests
       - name: Run Tests
+        working-directory: ./azurepowershell
         run: npm test
 
   deploy:
     needs: build-and-test
-    runs-on: ubuntu-latest
+    runs-on: windows-latest  # Use Windows runner for PowerShell script execution
 
     steps:
-      - name: Deploy Code
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Run PowerShell Script to Create VM
+        shell: pwsh
+        run: |
+          # Make sure to use the correct path to your PowerShell script
+          .\scripts\create-vm.ps1
+
+      - name: Deploy Code to VM
         run: |
           echo "Deploying the application to the VM..."
-          # Add commands to SSH into your VM and deploy the code
-          ssh azureadmin@52.233.20.97 "cd /home/azureadmin/azurepowershell/create-vm.ps1 && git pull && npm install && npm start"
+          # Use SSH to deploy the code to the VM
+          ssh azureadmin@52.233.20.97 "cd /home/azureadmin/azurepowershell && git pull && npm install && npm start"
