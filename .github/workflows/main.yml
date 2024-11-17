@@ -1,50 +1,30 @@
-name: CI Pipeline
+name: Run VM Creation Script
 
 on:
   push:
     branches:
-      - main
+      - main  # You can adjust the branch name if necessary.
   pull_request:
     branches:
-      - main
+      - main  # Trigger the workflow on PRs to the 'main' branch.
 
 jobs:
-  build-and-test:
-    runs-on: ubuntu-latest
+  run-create-vm:
+    runs-on: ubuntu-latest  # GitHub Actions will run the workflow on an Ubuntu runner
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v3  # Check out the repository's code
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '16'
-
-      - name: Install Dependencies
-        working-directory: ./azurepowershell
-        run: npm install
-
-      - name: Run Tests
-        working-directory: ./azurepowershell
-        run: npm test
-
-  deploy:
-    needs: build-and-test
-    runs-on: windows-latest  # Use Windows runner for PowerShell script execution
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
-
-      - name: Run PowerShell Script to Create VM
-        shell: pwsh
+      - name: Set up SSH for Azure VM
         run: |
-          # Make sure to use the correct path to your PowerShell script
-          .\scripts\create-vm.ps1
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+        env:
+          # The SSH private key should be stored as a GitHub secret
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Deploy Code to VM
+      - name: Run PowerShell Script on Azure VM
         run: |
-          echo "Deploying the application to the VM..."
-          # Use SSH to deploy the code to the VM
-          ssh azureadmin@52.233.20.97 "cd /home/azureadmin/azurepowershell && git pull && npm install && npm start"
+          ssh -o StrictHostKeyChecking=no azureadmin@52.233.20.97 "cd /home/azureadmin/azurepowershell && pwsh ./vm-create.ps1"
