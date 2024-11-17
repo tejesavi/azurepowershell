@@ -43,4 +43,4 @@ jobs:
         run: |
           echo "Deploying the application to the VM..."
           # Add commands to SSH into your VM and deploy the code
-          ssh azureadmin@52.233.20.97 "cd /home/azureadmin/azurepowershell && git pull && npm install && npm start"
+          ssh azureadmin@52.233.20.97 "cd /home/azureadmin/azurepowershell/create-vm.ps1 && git pull && npm install && npm start"
