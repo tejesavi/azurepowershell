@@ -3,28 +3,22 @@ name: Run VM Creation Script
 on:
   push:
     branches:
-      - main  # You can adjust the branch name if necessary.
+      - main  # Adjust if you need a different branch
   pull_request:
     branches:
-      - main  # Trigger the workflow on PRs to the 'main' branch.
+      - main  # Trigger on PR to main branch
 
 jobs:
   run-create-vm:
-    runs-on: ubuntu-latest  # GitHub Actions will run the workflow on an Ubuntu runner
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3  # Check out the repository's code
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      - name: Set up SSH for Azure VM
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-        env:
-          # The SSH private key should be stored as a GitHub secret
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Install sshpass
+        run: sudo apt-get install -y sshpass
 
-      - name: Run PowerShell Script on Azure VM
+      - name: Run PowerShell script on Azure VM
         run: |
-          ssh -o StrictHostKeyChecking=no azureadmin@52.233.20.97 "cd /home/azureadmin/azurepowershell && pwsh ./vm-create.ps1"
+          sshpass -p "Welcome@12345" ssh -o StrictHostKeyChecking=no azureadmin@52.233.20.97 "cd /home/azureadmin/azurepowershell && pwsh ./vm-create.ps1"
